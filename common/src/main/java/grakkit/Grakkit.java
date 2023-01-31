@@ -26,20 +26,20 @@ public class Grakkit {
    public static final HashMap<String, URLClassLoader> loaders = new HashMap<>();
 
    /** Closes all open instances. */
-   public static void close () {
+   public static void close() {
       Grakkit.driver.close();
       new ArrayList<>(Grakkit.instances).forEach(value -> value.destroy());
    }
 
    /** Initializes the Grakkit Environment. */
-   public static void init (String root) {
+   public static void init(String root) {
       Paths.get(root).toFile().mkdir();
       String main = "index.js";
       Config[] configs = {
-         new Config(Config.Format.JSON, root, ".grakkitrc", false),
-         new Config(Config.Format.YAML, root, "config.yml", false),
-         new Config(Config.Format.JSON, root, "grakkit.json", false),
-         new Config(Config.Format.JSON, root, "package.json", true)
+            new Config(Config.Format.JSON, root, ".grakkitrc", false),
+            new Config(Config.Format.YAML, root, "config.yml", false),
+            new Config(Config.Format.JSON, root, "grakkit.json", false),
+            new Config(Config.Format.JSON, root, "package.json", true)
       };
       for (Config config : configs) {
          if (config.main != null) {
@@ -56,10 +56,11 @@ public class Grakkit {
    }
 
    /** Locates the given class's true source location. */
-   public static URL locate (Class<?> clazz) {
+   public static URL locate(Class<?> clazz) {
       try {
          URL resource = clazz.getProtectionDomain().getCodeSource().getLocation();
-         if (resource instanceof URL) return resource;
+         if (resource instanceof URL)
+            return resource;
       } catch (SecurityException | NullPointerException error) {
          // do nothing
       }
@@ -69,7 +70,8 @@ public class Grakkit {
          String suffix = clazz.getCanonicalName().replace('.', '/') + ".class";
          if (link.endsWith(suffix)) {
             String path = link.substring(0, link.length() - suffix.length());
-            if (path.startsWith("jar:")) path = path.substring(4, path.length() - 2);
+            if (path.startsWith("jar:"))
+               path = path.substring(4, path.length() - 2);
             try {
                return new URL(path);
             } catch (Throwable error) {
@@ -81,13 +83,27 @@ public class Grakkit {
    }
 
    /** Executes the task loop for all instances. */
-   public static void tick () {
-      Grakkit.driver.tick();
-      Grakkit.instances.forEach(value -> value.tick());
+   public static void tick() {
+
+      try {
+         Grakkit.driver.tick();
+      } catch (Throwable error) {
+         // do nothing
+      }
+      try {
+         Grakkit.instances.iterator().forEachRemaining(value -> {
+            try {
+               value.tick();
+            } catch (Throwable error) {
+            }
+         });
+      } catch (Throwable error) {
+         // do nothing
+      }
    }
 
    /** Updates the current ClassLoader to one which supports the GraalJS engine. */
-   public static void patch (Loader loader) {
+   public static void patch(Loader loader) {
       try {
          loader.addURL(Grakkit.locate(Grakkit.class));
          Thread.currentThread().setContextClassLoader((ClassLoader) loader);

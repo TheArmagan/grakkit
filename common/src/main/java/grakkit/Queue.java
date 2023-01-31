@@ -11,14 +11,18 @@ public class Queue {
    public final LinkedList<Value> list = new LinkedList<>();
 
    /** Executes and removes all values from the queue. */
-   public void release () {
-      new ArrayList<>(this.list).forEach(value -> {
-         this.list.remove(value);
-         try {
-            value.executeVoid();
-         } catch (Throwable error) {
-            // do nothing
-         }
-      });
+   public void release() {
+      try {
+         new ArrayList<>(this.list).iterator().forEachRemaining(value -> {
+            this.list.remove(value);
+            try {
+               value.executeVoid();
+            } catch (Throwable error) {
+               // do nothing
+            }
+         });
+      } catch (Throwable error) {
+         // do nothing
+      }
    }
 }
